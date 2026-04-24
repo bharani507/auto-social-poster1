@@ -49,7 +49,6 @@ export default async function handler(req, res) {
             console.log("Posting IMAGE");
 
             let attempts = 3;
-            let fbPost;
 
             while (attempts > 0) {
                 try {
@@ -62,22 +61,19 @@ export default async function handler(req, res) {
                         }
                     );
 
-                    break; // success
+                    break;
 
                 } catch (err) {
                     const errorData = err.response?.data;
-
-                    console.log("Retry error:", errorData);
 
                     if (
                         errorData?.error?.code === 9007 ||
                         errorData?.error?.error_subcode === 2207027
                     ) {
-                        // wait 2 seconds and retry
                         await new Promise(res => setTimeout(res, 2000));
                         attempts--;
                     } else {
-                        throw err; // other errors → fail immediately
+                        throw err;
                     }
                 }
             }
@@ -147,7 +143,7 @@ export default async function handler(req, res) {
         }
 
         res.json({
-            facebook: fbPost.data,
+            facebook: fbPost ? fbPost.data : "Facebook post failed",
             instagram: igPost?.data || "No IG linked",
         });
 
