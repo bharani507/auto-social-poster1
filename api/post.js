@@ -23,7 +23,7 @@ export default async function handler(req, res) {
         const page_access_token = page.access_token;
 
         let fbPost;
-        let igPost = null;
+       
 
         console.log("Incoming:", { message, image_url, video_url });
 
