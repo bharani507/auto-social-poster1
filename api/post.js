@@ -87,7 +87,7 @@ export default async function handler(req, res) {
         else if (video_url) {
             console.log("Posting VIDEO");
 
-            await new Promise(res => setTimeout(res, 2000));
+            await new Promise(res => setTimeout(res, 3000));
 
             let attempts = 3;
 
@@ -95,17 +95,22 @@ export default async function handler(req, res) {
                 try {
                     fbPost = await axios.post(
                         `https://graph.facebook.com/${page_id}/videos`,
+                        null,
                         {
-                            file_url: video_url,
-                            description: message,
-                            access_token: page_access_token,
+                            params: {
+                                file_url: video_url,
+                                description: message,
+                                access_token: page_access_token,
+                            },
                         }
                     );
+
                     break;
 
                 } catch (err) {
                     console.log("Video retry error:", err.response?.data);
-                    await new Promise(res => setTimeout(res, 3000));
+
+                    await new Promise(res => setTimeout(res, 4000));
                     attempts--;
                 }
             }
