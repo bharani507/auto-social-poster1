@@ -1,96 +1,140 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Auto Poster</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<h2>Auto Social Poster</h2>
+  <h2>Auto Social Poster</h2>
 
-<button onclick="login()">Login with Facebook</button>
+  <button onclick="login()">Login with Facebook</button>
 
-<hr>
+  <hr>
 
-<h3>Facebook - Text</h3>
-<input id="fbText" placeholder="Write text..." />
-<button onclick="postFBText()">Post Text</button>
+  <h3>Facebook - Text</h3>
+  <input id="fbText" placeholder="Write text..." />
+  <button onclick="postFBText()">Post Text</button>
 
-<h3>Facebook - Image</h3>
-<input type="file" id="fbImage" />
-<input id="fbImageCaption" placeholder="Caption" />
-<button onclick="postFBImage()">Post Image</button>
+  <h3>Facebook - Image</h3>
+  <input type="file" id="fbImage" />
+  <input id="fbImageCaption" placeholder="Caption" />
+  <button onclick="postFBImage()">Post Image</button>
 
-<h3>Facebook - Video</h3>
-<input type="file" id="fbVideo" />
-<input id="fbVideoCaption" placeholder="Caption" />
-<button onclick="postFBVideo()">Post Video</button>
+  <h3>Facebook - Video</h3>
+  <input type="file" id="fbVideo" />
+  <input id="fbVideoCaption" placeholder="Caption" />
+  <button onclick="postFBVideo()">Post Video</button>
 
-<hr>
+  <hr>
 
-<h3>Instagram - Image</h3>
-<input type="file" id="igImage" />
-<input id="igCaption" placeholder="Caption" />
-<button onclick="postIGImage()">Post Image</button>
+  <h3>Instagram - Image</h3>
+  <input type="file" id="igImage" />
+  <input id="igCaption" placeholder="Caption" />
+  <button onclick="postIGImage()">Post Image</button>
 
-<h3>Instagram - Video</h3>
-<input type="file" id="igVideo" />
-<input id="igVideoCaption" placeholder="Caption" />
-<button onclick="postIGVideo()">Post Video</button>
+  <h3>Instagram - Video</h3>
+  <input type="file" id="igVideo" />
+  <input id="igVideoCaption" placeholder="Caption" />
+  <button onclick="postIGVideo()">Post Video</button>
 
-<script>
-  // Store token + page_id after login
-  const params = new URLSearchParams(window.location.search);
+  <script>
+    // Store token + page_id after login
+    const params = new URLSearchParams(window.location.search);
 
-  const token = params.get("access_token");
-  const page_id = params.get("page_id");
+    const token = params.get("access_token");
+    const page_id = params.get("page_id");
 
-  if (token) {
-    localStorage.setItem("access_token", token);
-  }
+    if (token) {
+      localStorage.setItem("access_token", token);
+    }
 
-  if (page_id) {
-    localStorage.setItem("page_id", page_id);
-  }
+    if (page_id) {
+      localStorage.setItem("page_id", page_id);
+    }
 
-  if (token) {
-    alert("Login successful!");
-    window.history.replaceState({}, document.title, "/");
-  }
+    if (token) {
+      alert("Login successful!");
+      window.history.replaceState({}, document.title, "/");
+    }
 
-  // Login function
-  function login() {
-    window.location.href = "/api/auth/login";
-  }
+    // Login function
+    function login() {
+      window.location.href = "/api/auth/login";
+    }
 
-  // Facebook text post
-  async function postFBText() {
-    const token = localStorage.getItem("access_token");
-    const page_id = localStorage.getItem("page_id");
-    const message = document.getElementById("fbText").value;
+    // Facebook text post
+    async function postFBText() {
+      const token = localStorage.getItem("access_token");
+      const page_id = localStorage.getItem("page_id");
+      const message = document.getElementById("fbText").value;
 
-    const res = await fetch("/api/post", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        access_token: token,
-        message,
-        page_id
-      })
-    });
+      const res = await fetch("/api/post", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          access_token: token,
+          message,
+          page_id
+        })
+      });
 
-    alert(JSON.stringify(await res.json()));
-  }
+      alert(JSON.stringify(await res.json()));
+    }
 
-  // Temporary placeholders (avoid errors)
-  function postFBImage(){ alert("Not implemented yet"); }
-  function postFBVideo(){ alert("Not implemented yet"); }
-  function postIGImage(){ alert("Not implemented yet"); }
-  function postIGVideo(){ alert("Not implemented yet"); }
 
-</script>
+
+    async function postFBImage() {
+      const file = document.getElementById("fbImage").files[0];
+      const caption = document.getElementById("fbImageCaption").value;
+      const token = localStorage.getItem("access_token");
+      const page_id = localStorage.getItem("page_id");
+
+      if (!file) return alert("Select image");
+
+      // Upload to Cloudinary
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "YOUR_UPLOAD_PRESET");
+
+      const uploadRes = await fetch(
+        "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload",
+        {
+          method: "POST",
+          body: formData
+        }
+      );
+
+      const uploadData = await uploadRes.json();
+      const image_url = uploadData.secure_url;
+
+      // Send to your backend
+      const res = await fetch("/api/post", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          access_token: token,
+          page_id,
+          message: caption,
+          image_url
+        })
+      });
+
+      alert(JSON.stringify(await res.json()));
+    }
+
+    function postFBVideo() { alert("Not implemented yet"); }
+    function postIGImage() { alert("Not implemented yet"); }
+    function postIGVideo() { alert("Not implemented yet"); }
+
+  </script>
 
 </body>
+
 </html>
