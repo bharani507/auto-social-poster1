@@ -134,16 +134,19 @@ export default async function handler(req, res) {
 
         const ig_id = igRes.data.instagram_business_account?.id;
 
-        // IG IMAGE
-        if (ig_id && image_url && image_url.trim() !== "") {
-            console.log("Posting IG IMAGE");
+        let igPost = null;
 
+        if (ig_id && (image_url || video_url)) {
+            console.log("Posting to Instagram");
+
+            // ================= CREATE MEDIA =================
             const container = await axios.post(
                 `https://graph.facebook.com/${ig_id}/media`,
                 null,
                 {
                     params: {
-                        image_url,
+                        ...(image_url && { image_url }),
+                        ...(video_url && { video_url, media_type: "VIDEO" }),
                         caption: message,
                         access_token: page_access_token,
                     },
@@ -152,76 +155,50 @@ export default async function handler(req, res) {
 
             const creation_id = container.data.id;
 
-            await new Promise(res => setTimeout(res, 3000));
+            // ================= CHECK STATUS =================
+            let status = "IN_PROGRESS";
+            let attempts = 10;
 
-            let attempts = 3;
+            while (attempts > 0 && status !== "FINISHED") {
+                await new Promise(res => setTimeout(res, 2000));
 
-            while (attempts > 0) {
-                try {
-                    igPost = await axios.post(
-                        `https://graph.facebook.com/${ig_id}/media_publish`,
-                        null,
-                        {
-                            params: {
-                                creation_id,
-                                access_token: page_access_token,
-                            },
-                        }
-                    );
-                    break;
+                const statusRes = await axios.get(
+                    `https://graph.facebook.com/${creation_id}`,
+                    {
+                        params: {
+                            fields: "status_code",
+                            access_token: page_access_token,
+                        },
+                    }
+                );
 
-                } catch (err) {
-                    console.log("IG image retry:", err.response?.data);
-                    await new Promise(res => setTimeout(res, 3000));
-                    attempts--;
-                }
+                status = statusRes.data.status_code;
+
+                console.log("IG Status:", status);
+
+                if (status === "FINISHED") break;
+
+                attempts--;
             }
-        }
 
-        // IG VIDEO
-        else if (ig_id && video_url && video_url.trim() !== "") {
-            console.log("Posting IG VIDEO");
+            if (status !== "FINISHED") {
+                throw new Error("Instagram media processing failed");
+            }
 
-            const container = await axios.post(
-                `https://graph.facebook.com/${ig_id}/media`,
+            // ================= PUBLISH =================
+            igPost = await axios.post(
+                `https://graph.facebook.com/${ig_id}/media_publish`,
                 null,
                 {
                     params: {
-                        media_type: "VIDEO",
-                        video_url,
-                        caption: message,
+                        creation_id,
                         access_token: page_access_token,
                     },
                 }
             );
-
-            const creation_id = container.data.id;
-
-            await new Promise(res => setTimeout(res, 5000));
-
-            let attempts = 5;
-
-            while (attempts > 0) {
-                try {
-                    igPost = await axios.post(
-                        `https://graph.facebook.com/${ig_id}/media_publish`,
-                        null,
-                        {
-                            params: {
-                                creation_id,
-                                access_token: page_access_token,
-                            },
-                        }
-                    );
-                    break;
-
-                } catch (err) {
-                    console.log("IG video retry:", err.response?.data);
-                    await new Promise(res => setTimeout(res, 4000));
-                    attempts--;
-                }
-            }
         }
+
+
 
         // ================= FINAL RESPONSE =================
 
@@ -236,7 +213,6 @@ export default async function handler(req, res) {
             facebook: fbPost ? fbPost.data : "Facebook post failed",
             instagram: igPost?.data || "No IG linked",
         });
-
     } catch (err) {
         return res.status(500).json({
             error: err.response?.data || err.message,
