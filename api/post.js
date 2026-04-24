@@ -50,13 +50,10 @@ export default async function handler(req, res) {
 
             fbPost = await axios.post(
                 `https://graph.facebook.com/${page_id}/photos`,
-                null,
                 {
-                    params: {
-                        url: image_url,
-                        caption: message,
-                        access_token: page_access_token,
-                    },
+                    url: image_url,
+                    caption: message,
+                    access_token: page_access_token,
                 }
             );
         }

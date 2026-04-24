@@ -3,58 +3,62 @@ import FormData from "form-data";
 import crypto from "crypto";
 
 export const config = {
-  api: {
-    bodyParser: false,
-  },
+    api: {
+        bodyParser: false,
+    },
 };
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).end();
-  }
-
-  try {
-    const chunks = [];
-    for await (const chunk of req) {
-      chunks.push(chunk);
+    if (req.method !== "POST") {
+        return res.status(405).end();
     }
 
-    const buffer = Buffer.concat(chunks);
+    try {
+        const chunks = [];
+        for await (const chunk of req) {
+            chunks.push(chunk);
+        }
 
-    const formData = new FormData();
+        const buffer = Buffer.concat(chunks);
 
-    formData.append("file", buffer, {
-      filename: "upload",
-    });
+        const formData = new FormData();
 
-    // ✅ STEP 1: DEFINE timestamp FIRST
-    const timestamp = Math.floor(Date.now() / 1000);
+        formData.append("file", buffer, {
+            filename: "upload",
+        });
 
-    // ✅ STEP 2: append it
-    formData.append("api_key", process.env.CLOUD_API_KEY);
-    formData.append("timestamp", timestamp);
+        // ✅ STEP 1: DEFINE timestamp FIRST
+        const timestamp = Math.floor(Date.now() / 1000);
 
-    // ✅ STEP 3: THEN use it
-    const signature = crypto
-      .createHash("sha1")
-      .update(`timestamp=${timestamp}${process.env.CLOUD_API_SECRET}`)
-      .digest("hex");
+        // ✅ STEP 2: append it
+        formData.append("api_key", process.env.CLOUD_API_KEY);
+        formData.append("timestamp", timestamp);
 
-    formData.append("signature", signature);
+        // ✅ STEP 3: THEN use it
+        const signature = crypto
+            .createHash("sha1")
+            .update(`timestamp=${timestamp}${process.env.CLOUD_API_SECRET}`)
+            .digest("hex");
 
-    // ✅ STEP 4: upload
-    const uploadRes = await axios.post(
-      `https://api.cloudinary.com/v1_1/${process.env.CLOUD_NAME}/auto/upload`,
-      formData,
-      {
-        headers: formData.getHeaders(),
-      }
-    );
+        formData.append("signature", signature);
 
-    res.json(uploadRes.data);
+        // ✅ STEP 4: upload
+        const uploadRes = await axios.post(
+            `https://api.cloudinary.com/v1_1/${process.env.CLOUD_NAME}/image/upload`,
+            formData,
+            {
+                headers: formData.getHeaders(),
+            }
+        );
 
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.status(500).json({ error: "Upload failed" });
-  }
+        const cleanUrl = uploadRes.data.secure_url.replace(
+            "/upload/",
+            "/upload/f_auto,q_auto/"
+        );
+        res.json(uploadRes.data);
+
+    } catch (err) {
+        console.error(err.response?.data || err.message);
+        res.status(500).json({ error: "Upload failed" });
+    }
 }
