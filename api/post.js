@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     const { access_token, message, page_id, image_url, video_url } = req.body;
 
     try {
-        // Get pages
+        // ================= GET PAGE =================
         const pageRes = await axios.get(
             "https://graph.facebook.com/me/accounts",
             { params: { access_token } }
@@ -22,11 +22,12 @@ export default async function handler(req, res) {
 
         const page_access_token = page.access_token;
 
-        // 🔥 🔥 PASTE HERE (EXACTLY HERE)
-
         let fbPost;
+        let igPost = null;
 
         console.log("Incoming:", { message, image_url, video_url });
+
+        // ================= FACEBOOK =================
 
         // TEXT
         if (!image_url && !video_url) {
@@ -60,7 +61,6 @@ export default async function handler(req, res) {
                             access_token: page_access_token,
                         }
                     );
-
                     break;
 
                 } catch (err) {
@@ -87,20 +87,36 @@ export default async function handler(req, res) {
         else if (video_url) {
             console.log("Posting VIDEO");
 
-            fbPost = await axios.post(
-                `https://graph.facebook.com/${page_id}/videos`,
-                null,
-                {
-                    params: {
-                        file_url: video_url,
-                        description: message,
-                        access_token: page_access_token,
-                    },
+            await new Promise(res => setTimeout(res, 2000));
+
+            let attempts = 3;
+
+            while (attempts > 0) {
+                try {
+                    fbPost = await axios.post(
+                        `https://graph.facebook.com/${page_id}/videos`,
+                        {
+                            file_url: video_url,
+                            description: message,
+                            access_token: page_access_token,
+                        }
+                    );
+                    break;
+
+                } catch (err) {
+                    console.log("Video retry error:", err.response?.data);
+                    await new Promise(res => setTimeout(res, 3000));
+                    attempts--;
                 }
-            );
+            }
+
+            if (!fbPost) {
+                throw new Error("Video upload failed after retries");
+            }
         }
 
-        // Get Instagram account
+        // ================= INSTAGRAM =================
+
         const igRes = await axios.get(
             `https://graph.facebook.com/${page_id}`,
             {
@@ -113,10 +129,10 @@ export default async function handler(req, res) {
 
         const ig_id = igRes.data.instagram_business_account?.id;
 
-        let igPost = null;
+        // IG IMAGE
+        if (ig_id && image_url && image_url.trim() !== "") {
+            console.log("Posting IG IMAGE");
 
-        if (ig_id && image_url) {
-            // Create media
             const container = await axios.post(
                 `https://graph.facebook.com/${ig_id}/media`,
                 null,
@@ -129,26 +145,95 @@ export default async function handler(req, res) {
                 }
             );
 
-            // Publish media
-            igPost = await axios.post(
-                `https://graph.facebook.com/${ig_id}/media_publish`,
+            const creation_id = container.data.id;
+
+            await new Promise(res => setTimeout(res, 3000));
+
+            let attempts = 3;
+
+            while (attempts > 0) {
+                try {
+                    igPost = await axios.post(
+                        `https://graph.facebook.com/${ig_id}/media_publish`,
+                        null,
+                        {
+                            params: {
+                                creation_id,
+                                access_token: page_access_token,
+                            },
+                        }
+                    );
+                    break;
+
+                } catch (err) {
+                    console.log("IG image retry:", err.response?.data);
+                    await new Promise(res => setTimeout(res, 3000));
+                    attempts--;
+                }
+            }
+        }
+
+        // IG VIDEO
+        else if (ig_id && video_url && video_url.trim() !== "") {
+            console.log("Posting IG VIDEO");
+
+            const container = await axios.post(
+                `https://graph.facebook.com/${ig_id}/media`,
                 null,
                 {
                     params: {
-                        creation_id: container.data.id,
+                        media_type: "VIDEO",
+                        video_url,
+                        caption: message,
                         access_token: page_access_token,
                     },
                 }
             );
+
+            const creation_id = container.data.id;
+
+            await new Promise(res => setTimeout(res, 5000));
+
+            let attempts = 5;
+
+            while (attempts > 0) {
+                try {
+                    igPost = await axios.post(
+                        `https://graph.facebook.com/${ig_id}/media_publish`,
+                        null,
+                        {
+                            params: {
+                                creation_id,
+                                access_token: page_access_token,
+                            },
+                        }
+                    );
+                    break;
+
+                } catch (err) {
+                    console.log("IG video retry:", err.response?.data);
+                    await new Promise(res => setTimeout(res, 4000));
+                    attempts--;
+                }
+            }
         }
 
-        res.json({
+        // ================= FINAL RESPONSE =================
+
+        if (ig_id && (image_url || video_url) && !igPost) {
+            console.log("Instagram post failed after retries");
+        }
+
+        console.log("Final FB:", fbPost?.data);
+        console.log("Final IG:", igPost?.data);
+
+        return res.json({
             facebook: fbPost ? fbPost.data : "Facebook post failed",
             instagram: igPost?.data || "No IG linked",
         });
 
     } catch (err) {
-        res.status(500).json({
+        return res.status(500).json({
             error: err.response?.data || err.message,
         });
     }
