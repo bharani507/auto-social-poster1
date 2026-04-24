@@ -1,6 +1,6 @@
-import axios from "axios";
+const axios = require("axios");
 
-export const login = (req, res) => {
+const login = (req, res) => {
   try {
     const appId = process.env.META_APP_ID;
     const redirect = process.env.META_REDIRECT_URI;
@@ -22,7 +22,7 @@ export const login = (req, res) => {
   }
 };
 
-export const callback = async (req, res) => {
+const callback = async (req, res) => {
   try {
     const code = req.query.code;
 
@@ -30,7 +30,6 @@ export const callback = async (req, res) => {
       return res.status(400).send("❌ No code received from Facebook");
     }
 
-    // ✅ TIMEOUT ADDED HERE (call #1 — exchange code for token)
     const tokenRes = await axios.get(
       "https://graph.facebook.com/v19.0/oauth/access_token",
       {
@@ -40,18 +39,17 @@ export const callback = async (req, res) => {
           redirect_uri: process.env.META_REDIRECT_URI,
           code,
         },
-        timeout: 8000, // ← 8 second timeout
+        timeout: 8000,
       }
     );
 
     const userToken = tokenRes.data.access_token;
 
-    // ✅ TIMEOUT ADDED HERE (call #2 — fetch pages)
     const pagesRes = await axios.get(
       "https://graph.facebook.com/v19.0/me/accounts",
       {
         params: { access_token: userToken },
-        timeout: 8000, // ← 8 second timeout
+        timeout: 8000,
       }
     );
 
@@ -74,5 +72,7 @@ export const callback = async (req, res) => {
   }
 };
 
-export const getPageId = () => process.env.PAGE_ID || "";
-export const getPageToken = () => process.env.PAGE_TOKEN || "";
+const getPageId = () => process.env.PAGE_ID || "";
+const getPageToken = () => process.env.PAGE_TOKEN || "";
+
+module.exports = { login, callback, getPageId, getPageToken };
