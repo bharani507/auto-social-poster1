@@ -37,7 +37,7 @@ export default async function handler(req, res) {
 
     // 🔥 REDIRECT TO LOCALHOST (YOUR PLAN)
     res.redirect(
-      `http://localhost:3000/?access_token=${token}&page_id=${page_id}`
+      `http://localhost:5000/?access_token=${token}&page_id=${page_id}`
     );
 
   } catch (err) {
