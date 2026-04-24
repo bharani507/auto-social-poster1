@@ -1,64 +1,72 @@
+import Busboy from "busboy";
 import axios from "axios";
 import FormData from "form-data";
 import crypto from "crypto";
 
 export const config = {
-    api: {
-        bodyParser: false,
-    },
+  api: {
+    bodyParser: false,
+  },
 };
 
 export default async function handler(req, res) {
-    if (req.method !== "POST") {
-        return res.status(405).end();
-    }
+  if (req.method !== "POST") {
+    return res.status(405).end();
+  }
 
-    try {
+  try {
+    const busboy = Busboy({ headers: req.headers });
+
+    let fileBuffer = null;
+
+    await new Promise((resolve, reject) => {
+      busboy.on("file", (fieldname, file) => {
         const chunks = [];
-        for await (const chunk of req) {
-            chunks.push(chunk);
-        }
 
-        const buffer = Buffer.concat(chunks);
-
-        const formData = new FormData();
-
-        formData.append("file", buffer, {
-            filename: "upload",
+        file.on("data", (data) => chunks.push(data));
+        file.on("end", () => {
+          fileBuffer = Buffer.concat(chunks);
         });
+      });
 
-        // ✅ STEP 1: DEFINE timestamp FIRST
-        const timestamp = Math.floor(Date.now() / 1000);
+      busboy.on("finish", resolve);
+      busboy.on("error", reject);
 
-        // ✅ STEP 2: append it
-        formData.append("api_key", process.env.CLOUD_API_KEY);
-        formData.append("timestamp", timestamp);
+      req.pipe(busboy);
+    });
 
-        // ✅ STEP 3: THEN use it
-        const signature = crypto
-            .createHash("sha1")
-            .update(`timestamp=${timestamp}${process.env.CLOUD_API_SECRET}`)
-            .digest("hex");
-
-        formData.append("signature", signature);
-
-        // ✅ STEP 4: upload
-        const uploadRes = await axios.post(
-            `https://api.cloudinary.com/v1_1/${process.env.CLOUD_NAME}/image/upload`,
-            formData,
-            {
-                headers: formData.getHeaders(),
-            }
-        );
-
-        const cleanUrl = uploadRes.data.secure_url.replace(
-            "/upload/",
-            "/upload/f_auto,q_auto/"
-        );
-        res.json(uploadRes.data);
-
-    } catch (err) {
-        console.error(err.response?.data || err.message);
-        res.status(500).json({ error: "Upload failed" });
+    if (!fileBuffer) {
+      return res.status(400).json({ error: "No file uploaded" });
     }
+
+    const formData = new FormData();
+
+    formData.append("file", fileBuffer, {
+      filename: "upload.jpg",
+    });
+
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    formData.append("api_key", process.env.CLOUD_API_KEY);
+    formData.append("timestamp", timestamp);
+
+    const signature = crypto
+      .createHash("sha1")
+      .update(`timestamp=${timestamp}${process.env.CLOUD_API_SECRET}`)
+      .digest("hex");
+
+    formData.append("signature", signature);
+
+    const uploadRes = await axios.post(
+      `https://api.cloudinary.com/v1_1/${process.env.CLOUD_NAME}/image/upload`,
+      formData,
+      { headers: formData.getHeaders() }
+    );
+
+    res.json(uploadRes.data);
+
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.status(500).json({ error: "Upload failed" });
+  }
 }
