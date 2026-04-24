@@ -22,10 +22,16 @@ export default async function handler(req, res) {
 
         const page_access_token = page.access_token;
 
+        // 🔥 🔥 PASTE HERE (EXACTLY HERE)
+
         let fbPost;
 
-        // ✅ TEXT POST
+        console.log("Incoming:", { message, image_url, video_url });
+
+        // TEXT
         if (!image_url && !video_url) {
+            console.log("Posting TEXT");
+
             fbPost = await axios.post(
                 `https://graph.facebook.com/${page_id}/feed`,
                 null,
@@ -38,8 +44,10 @@ export default async function handler(req, res) {
             );
         }
 
-        // ✅ IMAGE POST
+        // IMAGE
         else if (image_url) {
+            console.log("Posting IMAGE");
+
             fbPost = await axios.post(
                 `https://graph.facebook.com/${page_id}/photos`,
                 null,
@@ -53,8 +61,10 @@ export default async function handler(req, res) {
             );
         }
 
-        // ✅ VIDEO POST  ← 🔥 THIS IS WHERE YOUR CODE GOES
+        // VIDEO
         else if (video_url) {
+            console.log("Posting VIDEO");
+
             fbPost = await axios.post(
                 `https://graph.facebook.com/${page_id}/videos`,
                 null,
