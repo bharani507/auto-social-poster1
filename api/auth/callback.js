@@ -13,9 +13,9 @@ export default async function handler(req, res) {
       "https://graph.facebook.com/v19.0/oauth/access_token",
       {
         params: {
-          client_id: process.env.APP_ID,
-          client_secret: process.env.APP_SECRET,
-          redirect_uri: process.env.REDIRECT_URI,
+          client_id: process.env.META_APP_ID,
+          client_secret: process.env.META_APP_SECRET,
+          redirect_uri: process.env.META_REDIRECT_URI,
           code,
         },
       }
