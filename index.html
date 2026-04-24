@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auto Poster</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Auto Social Poster</h2>
+
+<button onclick="login()">Login with Facebook</button>
+
+<hr>
+
+<h3>Facebook - Text</h3>
+<input id="fbText" placeholder="Write text..." />
+<button onclick="postFBText()">Post Text</button>
+
+<h3>Facebook - Image</h3>
+<input type="file" id="fbImage" />
+<input id="fbImageCaption" placeholder="Caption" />
+<button onclick="postFBImage()">Post Image</button>
+
+<h3>Facebook - Video</h3>
+<input type="file" id="fbVideo" />
+<input id="fbVideoCaption" placeholder="Caption" />
+<button onclick="postFBVideo()">Post Video</button>
+
+<hr>
+
+<h3>Instagram - Image</h3>
+<input type="file" id="igImage" />
+<input id="igCaption" placeholder="Caption" />
+<button onclick="postIGImage()">Post Image</button>
+
+<h3>Instagram - Video</h3>
+<input type="file" id="igVideo" />
+<input id="igVideoCaption" placeholder="Caption" />
+<button onclick="postIGVideo()">Post Video</button>
+
+<script src="app.js"></script>
+
+</body>
+</html>
