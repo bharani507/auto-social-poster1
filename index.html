@@ -128,35 +128,33 @@
       const file = document.getElementById("fbVideo").files[0];
       const caption = document.getElementById("fbVideoCaption").value;
 
-      const token = localStorage.getItem("access_token");
-      const page_id = localStorage.getItem("page_id");
-
-      if (!file) return alert("Select video");
-
       const formData = new FormData();
       formData.append("file", file);
 
+      // upload video
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
-        body: formData
+        body: formData,
       });
 
       const uploadData = await uploadRes.json();
 
-      const video_url = uploadData.secure_url;
+      console.log("VIDEO URL:", uploadData.secure_url); // 🔥 IMPORTANT
 
+      // send to backend
       const res = await fetch("/api/post", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          access_token: token,
-          page_id,
+          access_token: localStorage.getItem("access_token"),
+          page_id: localStorage.getItem("page_id"),
           message: caption,
-          video_url
-        })
+          video_url: uploadData.secure_url,
+        }),
       });
 
-      alert(JSON.stringify(await res.json()));
+      const data = await res.json();
+      alert(JSON.stringify(data));
     }
     async function postIGImage() {
       const file = document.getElementById("igImage").files[0];
