@@ -34,9 +34,7 @@ export default async function handler(req, res) {
         // Send first page (or all pages if needed)
         const page = pages[0];
 
-        res.redirect(
-            `/?access_token=${access_token}&page_id=${page.id}`
-        );
+        res.redirect(`http://localhost:5000/?access_token=${token}&page_id=${page_id}`);
 
     } catch (err) {
         res.status(500).json({
