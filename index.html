@@ -38,7 +38,46 @@
 <input id="igVideoCaption" placeholder="Caption" />
 <button onclick="postIGVideo()">Post Video</button>
 
-<script src="app.js"></script>
+<script>
+  function login() {
+    window.location.href = "/api/auth/login";
+  }
+
+  async function postFBText() {
+    const token = localStorage.getItem("access_token");
+    const message = document.getElementById("fbText").value;
+
+    const res = await fetch("/api/post", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        access_token: token,
+        message,
+        page_id: prompt("Enter Page ID")
+      })
+    });
+
+    alert(JSON.stringify(await res.json()));
+  }
+
+  // TEMP placeholders to avoid errors
+  function postFBImage(){ alert("Not implemented yet"); }
+  function postFBVideo(){ alert("Not implemented yet"); }
+  function postIGImage(){ alert("Not implemented yet"); }
+  function postIGVideo(){ alert("Not implemented yet"); }
+
+  // Handle OAuth token
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("access_token");
+
+  if (token) {
+    localStorage.setItem("access_token", token);
+    alert("Login successful!");
+    window.history.replaceState({}, document.title, "/");
+  }
+</script>
 
 </body>
 </html>
