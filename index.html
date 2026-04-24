@@ -158,8 +158,64 @@
 
       alert(JSON.stringify(await res.json()));
     }
-    function postIGImage() { alert("Not implemented yet"); }
-    function postIGVideo() { alert("Not implemented yet"); }
+    async function postIGImage() {
+      const file = document.getElementById("igImage").files[0];
+      const caption = document.getElementById("igCaption").value;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Upload first
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const uploadData = await uploadRes.json();
+
+      // Then post
+      const res = await fetch("/api/post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_token: localStorage.getItem("access_token"),
+          page_id: localStorage.getItem("page_id"),
+          message: caption,
+          image_url: uploadData.secure_url,
+        }),
+      });
+
+      const data = await res.json();
+      alert(JSON.stringify(data));
+    }
+    async function postIGVideo() {
+      const file = document.getElementById("igVideo").files[0];
+      const caption = document.getElementById("igVideoCaption").value;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const uploadData = await uploadRes.json();
+
+      const res = await fetch("/api/post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_token: localStorage.getItem("access_token"),
+          page_id: localStorage.getItem("page_id"),
+          message: caption,
+          video_url: uploadData.secure_url,
+        }),
+      });
+
+      const data = await res.json();
+      alert(JSON.stringify(data));
+    }
 
   </script>
 
