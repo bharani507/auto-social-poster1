@@ -58,7 +58,7 @@ export default async function handler(req, res) {
         formData.append("signature", signature);
 
         const uploadRes = await axios.post(
-            `https://api.cloudinary.com/v1_1/${process.env.CLOUD_NAME}/image/upload`,
+            `https://api.cloudinary.com/v1_1/${process.env.CLOUD_NAME}/video/upload`,
             formData,
             { headers: formData.getHeaders() }
         );
