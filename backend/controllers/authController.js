@@ -14,7 +14,6 @@ export const login = (req, res) => {
 
     const url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirect)}&scope=pages_manage_posts,instagram_content_publish,pages_read_engagement`;
 
-    // ✅ FIXED: Actually redirect to Facebook instead of just sending the URL as text
     return res.redirect(url);
 
   } catch (err) {
@@ -31,6 +30,7 @@ export const callback = async (req, res) => {
       return res.status(400).send("❌ No code received from Facebook");
     }
 
+    // ✅ TIMEOUT ADDED HERE (call #1 — exchange code for token)
     const tokenRes = await axios.get(
       "https://graph.facebook.com/v19.0/oauth/access_token",
       {
@@ -40,15 +40,18 @@ export const callback = async (req, res) => {
           redirect_uri: process.env.META_REDIRECT_URI,
           code,
         },
+        timeout: 8000, // ← 8 second timeout
       }
     );
 
     const userToken = tokenRes.data.access_token;
 
+    // ✅ TIMEOUT ADDED HERE (call #2 — fetch pages)
     const pagesRes = await axios.get(
       "https://graph.facebook.com/v19.0/me/accounts",
       {
         params: { access_token: userToken },
+        timeout: 8000, // ← 8 second timeout
       }
     );
 
@@ -62,7 +65,6 @@ export const callback = async (req, res) => {
     console.log("✅ Page ID:", pageId);
     console.log("✅ Page Token:", pageToken);
 
-    // ✅ Redirect back to home with success message
     return res.redirect(`/?login=success&pageId=${pageId}`);
 
   } catch (err) {
@@ -72,6 +74,5 @@ export const callback = async (req, res) => {
   }
 };
 
-// These will be replaced with DB in future — placeholder for now
 export const getPageId = () => process.env.PAGE_ID || "";
 export const getPageToken = () => process.env.PAGE_TOKEN || "";
