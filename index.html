@@ -39,12 +39,34 @@
 <button onclick="postIGVideo()">Post Video</button>
 
 <script>
+  // Store token + page_id after login
+  const params = new URLSearchParams(window.location.search);
+
+  const token = params.get("access_token");
+  const page_id = params.get("page_id");
+
+  if (token) {
+    localStorage.setItem("access_token", token);
+  }
+
+  if (page_id) {
+    localStorage.setItem("page_id", page_id);
+  }
+
+  if (token) {
+    alert("Login successful!");
+    window.history.replaceState({}, document.title, "/");
+  }
+
+  // Login function
   function login() {
     window.location.href = "/api/auth/login";
   }
 
+  // Facebook text post
   async function postFBText() {
     const token = localStorage.getItem("access_token");
+    const page_id = localStorage.getItem("page_id");
     const message = document.getElementById("fbText").value;
 
     const res = await fetch("/api/post", {
@@ -55,28 +77,19 @@
       body: JSON.stringify({
         access_token: token,
         message,
-        page_id: prompt("Enter Page ID")
+        page_id
       })
     });
 
     alert(JSON.stringify(await res.json()));
   }
 
-  // TEMP placeholders to avoid errors
+  // Temporary placeholders (avoid errors)
   function postFBImage(){ alert("Not implemented yet"); }
   function postFBVideo(){ alert("Not implemented yet"); }
   function postIGImage(){ alert("Not implemented yet"); }
   function postIGVideo(){ alert("Not implemented yet"); }
 
-  // Handle OAuth token
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("access_token");
-
-  if (token) {
-    localStorage.setItem("access_token", token);
-    alert("Login successful!");
-    window.history.replaceState({}, document.title, "/");
-  }
 </script>
 
 </body>
