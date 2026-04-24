@@ -48,14 +48,43 @@ export default async function handler(req, res) {
         else if (image_url) {
             console.log("Posting IMAGE");
 
-            fbPost = await axios.post(
-                `https://graph.facebook.com/${page_id}/photos`,
-                {
-                    url: image_url,
-                    caption: message,
-                    access_token: page_access_token,
+            let attempts = 3;
+            let fbPost;
+
+            while (attempts > 0) {
+                try {
+                    fbPost = await axios.post(
+                        `https://graph.facebook.com/${page_id}/photos`,
+                        {
+                            url: image_url,
+                            caption: message,
+                            access_token: page_access_token,
+                        }
+                    );
+
+                    break; // success
+
+                } catch (err) {
+                    const errorData = err.response?.data;
+
+                    console.log("Retry error:", errorData);
+
+                    if (
+                        errorData?.error?.code === 9007 ||
+                        errorData?.error?.error_subcode === 2207027
+                    ) {
+                        // wait 2 seconds and retry
+                        await new Promise(res => setTimeout(res, 2000));
+                        attempts--;
+                    } else {
+                        throw err; // other errors → fail immediately
+                    }
                 }
-            );
+            }
+
+            if (!fbPost) {
+                throw new Error("Image upload failed after retries");
+            }
         }
 
         // VIDEO
