@@ -91,33 +91,28 @@
     async function postFBImage() {
       const file = document.getElementById("fbImage").files[0];
       const caption = document.getElementById("fbImageCaption").value;
+
       const token = localStorage.getItem("access_token");
       const page_id = localStorage.getItem("page_id");
 
       if (!file) return alert("Select image");
 
-      // Upload to Cloudinary
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("upload_preset", "YOUR_UPLOAD_PRESET");
 
-      const uploadRes = await fetch(
-        "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload",
-        {
-          method: "POST",
-          body: formData
-        }
-      );
+      // 🔥 Upload via your backend
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+      });
 
       const uploadData = await uploadRes.json();
+
       const image_url = uploadData.secure_url;
 
-      // Send to your backend
       const res = await fetch("/api/post", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           access_token: token,
           page_id,
@@ -129,7 +124,40 @@
       alert(JSON.stringify(await res.json()));
     }
 
-    function postFBVideo() { alert("Not implemented yet"); }
+    async function postFBVideo() {
+      const file = document.getElementById("fbVideo").files[0];
+      const caption = document.getElementById("fbVideoCaption").value;
+
+      const token = localStorage.getItem("access_token");
+      const page_id = localStorage.getItem("page_id");
+
+      if (!file) return alert("Select video");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      const uploadData = await uploadRes.json();
+
+      const video_url = uploadData.secure_url;
+
+      const res = await fetch("/api/post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_token: token,
+          page_id,
+          message: caption,
+          video_url
+        })
+      });
+
+      alert(JSON.stringify(await res.json()));
+    }
     function postIGImage() { alert("Not implemented yet"); }
     function postIGVideo() { alert("Not implemented yet"); }
 
