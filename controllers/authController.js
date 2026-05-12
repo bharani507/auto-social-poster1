@@ -120,14 +120,55 @@ export const callback = async (req, res) => {
       existingPage.instagramId =
         igRes.data.instagram_business_account?.id || "";
     
-      await existingPage.save();
+      try {
+
+        await existingPage.save();
+      
+        console.log("PAGE UPDATED");
+      
+      } catch (mongoError) {
+      
+        console.log("SAVE ERROR:");
+      
+        console.log(mongoError);
+      
+        throw mongoError;
+      }
     
       console.log("PAGE UPDATED");
     
     } else {
     
       // 🔥 INSERT NEW PAGE
-      await AccessContainer.create({
+      try {
+
+        await AccessContainer.create({
+      
+          userId,
+      
+          platform: "facebook",
+      
+          pageId: page.id,
+      
+          pageName: page.name,
+      
+          pageToken: page.access_token,
+      
+          instagramId:
+            igRes.data.instagram_business_account?.id || "",
+      
+        });
+      
+        console.log("NEW PAGE INSERTED");
+      
+      } catch (mongoError) {
+      
+        console.log("CREATE ERROR:");
+      
+        console.log(mongoError);
+      
+        throw mongoError;
+      }
     
         userId,
     
