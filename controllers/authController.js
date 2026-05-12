@@ -33,25 +33,26 @@ export const callback = async (req, res) => {
 
   try {
 
-    // 🔥 FACEBOOK CODE
+    console.log("CALLBACK HIT");
+
     const code = req.query.code;
 
-    // 🔥 GET STATE
+    console.log("CODE:", code);
+
+    // 🔥 PARSE STATE
     const state = JSON.parse(req.query.state);
 
-    // 🔥 GET USER ID
+    console.log("STATE:", state);
+
     const userId = state.userId;
 
-    // 🔥 GET REDIRECT PAGE
     const redirectPage = state.redirect;
 
     if (!code) {
       return res.send("No code received");
     }
 
-    console.log("USER ID:", userId);
-
-    // 🔥 GET ACCESS TOKEN
+    // 🔥 ACCESS TOKEN
     const tokenRes = await axios.get(
       "https://graph.facebook.com/v19.0/oauth/access_token",
       {
@@ -64,11 +65,11 @@ export const callback = async (req, res) => {
       }
     );
 
+    console.log("TOKEN RESPONSE:", tokenRes.data);
+
     const accessToken = tokenRes.data.access_token;
 
-    console.log("ACCESS TOKEN:", accessToken);
-
-    // 🔥 GET FACEBOOK PAGE
+    // 🔥 GET PAGE
     const pagesRes = await axios.get(
       "https://graph.facebook.com/v19.0/me/accounts",
       {
@@ -78,15 +79,15 @@ export const callback = async (req, res) => {
       }
     );
 
+    console.log("PAGES:", pagesRes.data);
+
     const page = pagesRes.data.data[0];
 
     if (!page) {
       return res.send("No Facebook page found");
     }
 
-    console.log("PAGE:", page);
-
-    // 🔥 GET INSTAGRAM BUSINESS ACCOUNT
+    // 🔥 GET INSTAGRAM ID
     const igRes = await axios.get(
       `https://graph.facebook.com/v19.0/${page.id}`,
       {
@@ -97,75 +98,50 @@ export const callback = async (req, res) => {
       }
     );
 
-    const instagramId =
-      igRes.data.instagram_business_account?.id || "";
+    console.log("IG RESPONSE:", igRes.data);
 
-    console.log("INSTAGRAM ID:", instagramId);
-
-    // 🔥 SAVE USER TOKEN
+    // 🔥 SAVE TO DB
     await AccessContainer.findOneAndUpdate(
-    {
+      {
         userId,
         platform: "facebook",
-    },
-    {
+      },
+      {
         userId,
         platform: "facebook",
         pageId: page.id,
         pageName: page.name,
         pageToken: page.access_token,
-        instagramId,
-    },
-    {
+        instagramId:
+          igRes.data.instagram_business_account?.id || "",
+      },
+      {
         upsert: true,
         new: true,
-    }
+      }
     );
 
     console.log("TOKEN SAVED");
 
-    // 🔥 REDIRECT TO FRONTEND UI
+    // 🔥 REDIRECT UI
     return res.redirect(
       `${process.env.FRONTEND_URL}${redirectPage}?success=true`
     );
 
   } catch (error) {
 
-    console.log(error.response?.data || error.message);
+    console.log("FULL ERROR:");
+
+    console.log(error);
+
+    console.log("META ERROR:");
+
+    console.log(error.response?.data);
+
+    console.log("MESSAGE:");
+
+    console.log(error.message);
 
     return res.status(500).send("OAuth failed");
   }
-};
-
-// 🔥 GET PAGE TOKEN
-export const getPageToken = async (userId) => {
-
-  const tokenData = await AccessContainer.findOne({
-    userId,
-    platform: "facebook",
-    });
-
-  return tokenData.pageToken;
-};
-
-// 🔥 GET PAGE ID
-export const getPageId = async (userId) => {
-
-    const tokenData = await AccessContainer.findOne({
-        userId,
-        platform: "facebook",
-        });
-
-  return tokenData.pageId;
-};
-
-// 🔥 GET INSTAGRAM ID
-export const getInstagramId = async (userId) => {
-
-  const tokenData = await AccessContainer.findOne({
-    userId,
-    platform: "facebook",
-    });
-
-  return tokenData.instagramId;
 };
