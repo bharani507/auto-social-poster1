@@ -21,7 +21,23 @@ app.use("/auth", authRoutes);
 
 // 🔥 TEST ROUTE
 app.get("/", (req, res) => {
-  res.send("Backend Running");
+
+  const success = req.query.success;
+
+  if (success === "true") {
+
+    return res.send(`
+      <h1 style="color:green;">
+        Login Successfully ✅
+      </h1>
+    `);
+  }
+
+  res.send(`
+    <h1>
+      Backend Running
+    </h1>
+  `);
 });
 
 const PORT = process.env.PORT || 5000;
