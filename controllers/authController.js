@@ -22,7 +22,7 @@ export const login = (req, res) => {
     `https://www.facebook.com/dialog/oauth` +
     `?client_id=${process.env.APP_ID}` +
     `&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}` +
-    `&scope=pages_manage_posts,pages_read_engagement,instagram_content_publish` +
+    `&scope=pages_show_list,pages_manage_posts,pages_read_engagement,instagram_content_publish` +
     `&state=${encodeURIComponent(stateData)}`;
 
   res.redirect(url);
