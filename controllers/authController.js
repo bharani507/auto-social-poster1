@@ -125,7 +125,7 @@ export const callback = async (req, res) => {
 
     // 🔥 REDIRECT UI
     return res.redirect(
-      `${process.env.FRONTEND_URL}${redirectPage}?success=true`
+      `${process.env.FRONTEND_URL}?success=true`
     );
 
   } catch (error) {
