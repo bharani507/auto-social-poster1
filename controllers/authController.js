@@ -103,25 +103,49 @@ export const callback = async (req, res) => {
     console.log("IG RESPONSE:", igRes.data);
 
     // 🔥 SAVE TO DB
-    await AccessContainer.findOneAndUpdate(
-      {
+    // 🔥 CHECK EXISTING PAGE
+    const existingPage = await AccessContainer.findOne({
+      userId,
+      pageName: page.name,
+      platform: "facebook",
+    });
+    
+    // 🔥 IF PAGE EXISTS → UPDATE
+    if (existingPage) {
+    
+      existingPage.pageId = page.id;
+    
+      existingPage.pageToken = page.access_token;
+    
+      existingPage.instagramId =
+        igRes.data.instagram_business_account?.id || "";
+    
+      await existingPage.save();
+    
+      console.log("PAGE UPDATED");
+    
+    } else {
+    
+      // 🔥 INSERT NEW PAGE
+      await AccessContainer.create({
+    
         userId,
+    
         platform: "facebook",
-      },
-      {
-        userId,
-        platform: "facebook",
+    
         pageId: page.id,
+    
         pageName: page.name,
+    
         pageToken: page.access_token,
+    
         instagramId:
           igRes.data.instagram_business_account?.id || "",
-      },
-      {
-        upsert: true,
-        new: true,
-      }
-    );
+    
+      });
+    
+      console.log("NEW PAGE INSERTED");
+    }
 
     console.log("TOKEN SAVED");
 
