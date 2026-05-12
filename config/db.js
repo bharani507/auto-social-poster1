@@ -5,7 +5,7 @@ const connectDB = async () => {
   try {
 
     await mongoose.connect(process.env.MONGO_URI, {
-      dbName: "doctor_panel",
+      dbName: "Doctor_panel",
     });
 
     console.log("MongoDB Connected");
