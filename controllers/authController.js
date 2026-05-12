@@ -54,7 +54,7 @@ export const callback = async (req, res) => {
       return res.send("No code received");
     }
 
-    // 🔥 ACCESS TOKEN
+    // 🔥 GET ACCESS TOKEN
     const tokenRes = await axios.get(
       "https://graph.facebook.com/v19.0/oauth/access_token",
       {
@@ -71,7 +71,7 @@ export const callback = async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    // 🔥 GET PAGE
+    // 🔥 GET FACEBOOK PAGES
     const pagesRes = await axios.get(
       "https://graph.facebook.com/v19.0/me/accounts",
       {
@@ -89,7 +89,7 @@ export const callback = async (req, res) => {
       return res.send("No Facebook page found");
     }
 
-    // 🔥 GET INSTAGRAM ID
+    // 🔥 GET INSTAGRAM BUSINESS ACCOUNT
     const igRes = await axios.get(
       `https://graph.facebook.com/v19.0/${page.id}`,
       {
@@ -102,90 +102,70 @@ export const callback = async (req, res) => {
 
     console.log("IG RESPONSE:", igRes.data);
 
-    // 🔥 SAVE TO DB
     // 🔥 CHECK EXISTING PAGE
     const existingPage = await AccessContainer.findOne({
       userId,
-      pageName: page.name,
+      pageId: page.id,
       platform: "facebook",
     });
-    
+
     // 🔥 IF PAGE EXISTS → UPDATE
     if (existingPage) {
-    
-      existingPage.pageId = page.id;
-    
+
+      existingPage.pageName = page.name;
+
       existingPage.pageToken = page.access_token;
-    
+
       existingPage.instagramId =
         igRes.data.instagram_business_account?.id || "";
-    
+
       try {
 
         await existingPage.save();
-      
+
         console.log("PAGE UPDATED");
-      
+
       } catch (mongoError) {
-      
+
         console.log("SAVE ERROR:");
-      
+
         console.log(mongoError);
-      
+
         throw mongoError;
       }
-    
-      console.log("PAGE UPDATED");
-    
+
     } else {
-    
+
       // 🔥 INSERT NEW PAGE
       try {
 
         await AccessContainer.create({
-      
+
           userId,
-      
+
           platform: "facebook",
-      
+
           pageId: page.id,
-      
+
           pageName: page.name,
-      
+
           pageToken: page.access_token,
-      
+
           instagramId:
             igRes.data.instagram_business_account?.id || "",
-      
+
         });
-      
+
         console.log("NEW PAGE INSERTED");
-      
+
       } catch (mongoError) {
-      
+
         console.log("CREATE ERROR:");
-      
+
         console.log(mongoError);
-      
+
         throw mongoError;
       }
-    
-        userId,
-    
-        platform: "facebook",
-    
-        pageId: page.id,
-    
-        pageName: page.name,
-    
-        pageToken: page.access_token,
-    
-        instagramId:
-          igRes.data.instagram_business_account?.id || "",
-    
-      });
-    
-      console.log("NEW PAGE INSERTED");
     }
 
     console.log("TOKEN SAVED");
@@ -197,18 +177,26 @@ export const callback = async (req, res) => {
 
   } catch (error) {
 
-    console.log("FULL ERROR:");
+    console.log("========== FULL ERROR ==========");
 
     console.log(error);
 
-    console.log("META ERROR:");
+    console.log("========== RESPONSE DATA ==========");
 
     console.log(error.response?.data);
 
-    console.log("MESSAGE:");
+    console.log("========== MESSAGE ==========");
 
     console.log(error.message);
 
-    return res.status(500).send("OAuth failed");
+    console.log("========== STACK ==========");
+
+    console.log(error.stack);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+      metaError: error.response?.data || null,
+    });
   }
 };
