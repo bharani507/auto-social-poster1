@@ -13,7 +13,7 @@ const connectDB = async () => {
     }
 
     await mongoose.connect(process.env.MONGO_URI, {
-      dbName: "Doctor_panel",
+      dbName: "wynsync-growth-development",
     });
 
     console.log("MongoDB Connected");
