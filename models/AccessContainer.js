@@ -32,6 +32,11 @@ const accessContainerSchema = new mongoose.Schema({
     default: "",
   },
 
+  instagramUsername: {
+    type: String,
+    default: "",
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,
