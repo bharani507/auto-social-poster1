@@ -13,7 +13,7 @@ const connectDB = async () => {
     }
 
     await mongoose.connect(process.env.MONGO_URI, {
-      dbName: "wynsync-growth-development",
+      dbName: "Social_media",
     });
 
     console.log("MongoDB Connected");
