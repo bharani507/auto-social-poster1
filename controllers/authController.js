@@ -2,6 +2,8 @@ import axios from "axios";
 
 import AccessContainer from "../models/AccessContainer.js";
 
+import connectDB from "../config/db.js";
+
 // 🔥 LOGIN
 export const login = (req, res) => {
 
@@ -34,6 +36,7 @@ export const login = (req, res) => {
 export const callback = async (req, res) => {
 
   try {
+    await connectDB();
 
     console.log("CALLBACK HIT");
 
