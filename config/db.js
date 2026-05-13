@@ -4,14 +4,15 @@ const connectDB = async () => {
 
   try {
 
-    // 🔥 PREVENT MULTIPLE CONNECTIONS
-    if (mongoose.connections[0].readyState) {
+    // 🔥 IF ALREADY CONNECTED
+    if (mongoose.connection.readyState === 1) {
 
       console.log("MongoDB Already Connected");
 
       return;
     }
 
+    // 🔥 CONNECT
     await mongoose.connect(process.env.MONGO_URI, {
       dbName: "Doctor_panel",
     });
@@ -20,9 +21,11 @@ const connectDB = async () => {
 
   } catch (error) {
 
-    console.log("MongoDB Error:");
+    console.log("MongoDB Connection Error:");
 
     console.log(error);
+
+    throw error;
   }
 };
 
