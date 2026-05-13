@@ -1,15 +1,16 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 
-
+import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
 
+dotenv.config();
+
+connectDB();
 
 const app = express();
-
-// 🔥 CONNECT DATABASE FIRST
-
 
 app.use(cors());
 
@@ -17,8 +18,6 @@ app.use(express.json());
 
 // 🔥 ROUTES
 app.use("/auth", authRoutes);
-
-app.use("/post", postRoutes);
 
 // 🔥 TEST ROUTE
 app.get("/", (req, res) => {
@@ -41,4 +40,8 @@ app.get("/", (req, res) => {
   `);
 });
 
-export default app;
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
+});
