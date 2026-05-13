@@ -100,12 +100,13 @@ export const callback = async (req, res) => {
       `https://graph.facebook.com/v19.0/${page.id}`,
       {
         params: {
-          fields: "instagram_business_account",
+          fields:
+            "instagram_business_account{id,username}",
           access_token: page.access_token,
         },
       }
     );
-
+    
     console.log("IG RESPONSE:", igRes.data);
 
     // 🔥 CHECK EXISTING PAGE
@@ -159,6 +160,9 @@ export const callback = async (req, res) => {
 
           instagramId:
             igRes.data.instagram_business_account?.id || "",
+          
+          instagramUsername:
+            igRes.data.instagram_business_account?.username || "",
 
         });
 
