@@ -4,7 +4,7 @@ const connectDB = async () => {
 
   try {
 
-    // 🔥 IF ALREADY CONNECTED
+    // 🔥 ALREADY CONNECTED
     if (mongoose.connection.readyState === 1) {
 
       console.log("MongoDB Already Connected");
@@ -12,7 +12,7 @@ const connectDB = async () => {
       return;
     }
 
-    // 🔥 CONNECT
+    // 🔥 CONNECT DATABASE
     await mongoose.connect(process.env.MONGO_URI, {
       dbName: "Doctor_panel",
     });
